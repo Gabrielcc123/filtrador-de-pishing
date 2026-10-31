@@ -1,0 +1,39 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --background: #e8eef4;
+  --foreground: #0f172a;
+  --surface: rgba(255, 255, 255, 0.72);
+  --accent: #0f766e;
+  --danger: #be123c;
+}
+
+body {
+  color: var(--foreground);
+  background:
+    radial-gradient(1200px 600px at 10% -10%, rgba(15, 118, 110, 0.14), transparent 55%),
+    radial-gradient(900px 500px at 100% 0%, rgba(14, 116, 144, 0.12), transparent 50%),
+    linear-gradient(180deg, #edf2f7 0%, #e2e8f0 45%, #dbe4ee 100%);
+  min-height: 100vh;
+}
+
+::selection {
+  background: rgba(15, 118, 110, 0.25);
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-in {
+  animation: fade-in 0.45s ease-out both;
+}
