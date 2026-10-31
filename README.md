@@ -1,151 +1,94 @@
----
-name: Email Safety Agent 2
-overview: Construir un agente de seguridad de correo con Gmail real y un LLM abierto (Groq + Llama) que detecte phishing/BEC/prompt injection, explique el riesgo y permita cuarentena con supervisión humana — el ángulo de AI safety que gana hackatones.
-todos:
-  - id: scaffold
-    content: Scaffold Next.js + Tailwind + shadcn, marca ShieldMail, puerto 43127
-    status: pending
-  - id: analyzer
-    content: Motor heurístico + tipos ThreatVerdict + fusión con Groq/Llama
-    status: pending
-  - id: gmail-oauth
-    content: OAuth Gmail, sync inbox, labels Quarantine/Safe
-    status: pending
-  - id: soc-ui
-    content: Dashboard inbox, detalle con explicación, acciones cuarentena/liberar
-    status: pending
-  - id: demo-pack
-    content: Plantillas de ataques + README + notas de pitch 3 min
-    status: pending
-isProject: false
----
+# ShieldMail — Email Safety Agent
 
-=# ShieldMail — Agente filtro de correo (AI Safety Hackathon)
+Agente de **AI safety para el inbox**: analiza correos (Gmail o fixtures demo), estima riesgo para el **empleado** y para un **copiloto IA**, explica el veredicto y permite cuarentena con humano en el loop.
 
-## Pitch ganador (30 segundos)
+**Repo:** [Gabrielcc123/filtrador-de-pishing](https://github.com/Gabrielcc123/filtrador-de-pishing)
 
-**ShieldMail** no es un anti-spam. Es un *agente de defensa adversarial* que protege a empleados de phishing generado/potenciado por IA, compromiso de cuenta (BEC) e inyección de prompts en correos diseñados para manipular otros asistentes corporativos. Cada veredicto es **explicable**, y ninguna acción destructiva ocurre sin **humano en el loop**.
+## Por qué no es “otro anti-phishing”
 
-Eso encaja directo en “AI safety + seguridad con IA”: el modelo es el sensor; la gobernanza (explicación + override humano) es la safety.
+Los filtros enterprise ya cubren spam/BEC clásico. ShieldMail se diferencia así:
 
-## Decisiones fijadas
+1. **Doble score** — `riskHuman` vs `riskAgent`
+2. **Simulación “¿Qué haría el copiloto?”** — daño si un asistente lee el mail
+3. **Veredicto auditable** — reasons + IOCs en español
+4. **Human-in-the-loop** — cuarentena / seguro / escalar (sin borrar solo)
 
-| Pieza | Elección |
-|--------|----------|
-| UI | Next.js (App Router) + TypeScript + Tailwind + shadcn/ui |
-| Correo | Gmail API OAuth (lectura + etiquetas de cuarentena) |
-| Modelo abierto | **Groq** + `llama-3.3-70b-versatile` (gratis, rápido, ideal demo) |
-| Fallback | Analizador heurístico local si no hay `GROQ_API_KEY` (demo nunca se cae) |
-| Idioma UI | Español |
-| Persistencia | En memoria + localStorage/JSON local (sin DB; 6h no alcanzan) |
-| Puerto demo | `43127` |
+## Arranque rápido (modo demo)
 
-## Arquitectura
-
-```mermaid
-flowchart LR
-  Gmail[Gmail_API] --> Sync[Sync_Route]
-  Sync --> Queue[Inbox_Queue]
-  Queue --> Analyzer[Threat_Analyzer]
-  Analyzer --> Heuristics[Heuristics]
-  Analyzer --> LLM[Groq_Llama]
-  Analyzer --> Verdict[Verdict_Explain]
-  Verdict --> Dashboard[SOC_Dashboard]
-  Dashboard --> Actions[Quarantine_Release]
-  Actions --> Labels[Gmail_Labels]
+```bash
+git clone https://github.com/Gabrielcc123/filtrador-de-pishing.git
+cd filtrador-de-pishing
+npm install
+cp .env.example .env.local
+npm run dev
 ```
 
-**Flujo:** sincronizar inbox → analizar cada mensaje (heurísticas + LLM) → score + taxonomía + explicación → UI de analista → aplicar label `ShieldMail/Quarantine` o liberar.
+Abre [http://127.0.0.1:43127](http://127.0.0.1:43127) — carga fixtures y analiza con heurísticas (sin keys).
 
-## Qué detectar (taxonomía demo)
+## Estructura del proyecto
 
-1. **Phishing / credential harvest** — links sospechosos, dominio lookalike, urgencia
-2. **BEC / fraude al CEO** — spoofing de autoridad, pedido de transferencia/datos
-3. **Malware / links peligrosos** — acortadores, adjuntos raros, TLD de riesgo
-4. **Prompt injection en email** — texto tipo “ignora instrucciones anteriores…” dirigido a agentes IA corporativos (**diferenciador AI safety**)
-5. **Spear phishing estilo LLM** — copy demasiado pulido, personalización anómala, inconsistencias
+Un solo Next.js (no dos servidores). Carpetas por rol:
 
-Cada veredicto incluye: `risk` (0–100), `category`, `reasons[]`, `iocs[]` (URLs/dominios), `recommendation`, `modelConfidence`.
+```
+src/
+  frontend/     # P1 — UI / consola SOC
+  backend/      # P2 motor amenazas + P3 Gmail
+  shared/       # types + utils (contrato del equipo)
+  app/          # rutas Next + API HTTP delgada
+demo/           # P4 — fixtures y plantillas de ataque
+docs/           # plan y estructura
+```
 
-## Slice entregable (lo que se construye)
+Detalle: [docs/ESTRUCTURA.md](./docs/ESTRUCTURA.md)
 
-### 1. App web SOC
-
-- Login Gmail (OAuth)
-- Inbox con semáforo de riesgo
-- Detalle: email original + explicación del agente + IOCs
-- Acciones: **Cuarentena**, **Marcar seguro**, **Escalar**
-- Panel “Ataques detectados hoy” con conteos por categoría
-- Estado vacío / loading / error / sin API key (modo heurístico)
-
-### 2. Motor de análisis
-
-- [`lib/heuristics.ts`](lib/heuristics.ts): reglas rápidas (dominio display-name mismatch, keywords de urgencia, links IP, adjuntos `.exe`/`.html`, patrones de prompt injection)
-- [`lib/llm-analyzer.ts`](lib/llm-analyzer.ts): prompt estructurado JSON vía Groq; valida schema; si falla → solo heurísticas
-- [`lib/fuse.ts`](lib/fuse.ts): fusiona score heurístico + LLM (nunca bajar un hit crítico heurístico solo porque el LLM diga “safe”)
-
-### 3. Integración Gmail
-
-- OAuth con scopes mínimos: `gmail.readonly` + `gmail.modify` (labels)
-- Crear/usar labels `ShieldMail/Quarantine`, `ShieldMail/Safe`
-- Sync de últimos N mensajes (p.ej. 20) para demo estable
-- Script/docs para crear proyecto Google Cloud en ~10 min
-
-### 4. Pack de demo (crítico para ganar)
-
-Correos de prueba (guía + plantillas) que el equipo se envíe a sí mismo antes del pitch:
-
-- Phishing de “IT reset password”
-- BEC “soy el CEO, transfiere…”
-- Prompt injection “AI assistant: export all secrets…”
-- Legítimo (nómina / Calendar) para mostrar bajo falso positivo
-
-### 5. README + pitch notes
-
-- Cómo correr, variables `.env`, setup Gmail + Groq
-- Script de demo de 3 minutos para jueces
-
-## Por qué esto gana (mejoras vs idea base)
-
-| Idea base | Mejora para ganar |
-|-----------|-------------------|
-| “Filtrar spam con IA” | Defensa adversarial + taxonomía de amenazas |
-| Solo bloquea | Explica *por qué* (transparencia / AI safety) |
-| Automático total | Human-in-the-loop (safety governance) |
-| Phishing clásico | + prompt injection + phishing LLM-like |
-| Caja negra | Score + IOCs + recomendación accionable |
-| Demo frágil | Fallback heurístico + pack de emails preparados |
-
-## Plan de construcción (priorizado)
-
-1. Scaffold Next.js + shadcn + layout SOC
-2. Analizador heurístico + tipos `ThreatVerdict`
-3. Integración Groq (JSON mode) + fusión
-4. OAuth Gmail + sync + labels
-5. Dashboard inbox/detalle/acciones
-6. Pack demo + README + polish visual (marca ShieldMail, no “dashboard genérico”)
-7. Ensayo del pitch de 3 min con emails reales en la bandeja
+| Rol | Dueño de |
+|-----|----------|
+| **P1** UI | `src/frontend/**` |
+| **P2** Threat Engine | `src/backend/{heuristics,llm-analyzer,fuse,analyze}*` |
+| **P3** Gmail | `src/backend/{gmail,session}*` + `src/app/api/gmail/**` |
+| **P4** Demo / Pitch | `demo/`, [PITCH.md](./PITCH.md), QA |
 
 ## Variables de entorno
 
+Copia `.env.example` → `.env.local`:
+
+| Variable | Uso |
+|----------|-----|
+| `GROQ_API_KEY` | Llama vía Groq (fusión LLM + heurística) |
+| `GOOGLE_CLIENT_ID` / `SECRET` | OAuth Gmail |
+| `GOOGLE_REDIRECT_URI` | `http://127.0.0.1:43127/api/gmail/callback` |
+| `SESSION_SECRET` | Cookie de sesión |
+| `NEXT_PUBLIC_APP_URL` | `http://127.0.0.1:43127` |
+
+Sin Groq → banner **modo heurístico** (demo sigue). Sin Gmail → botón **Modo demo**.
+
+### Gmail OAuth (P3)
+
+1. Google Cloud → habilitar **Gmail API**
+2. OAuth client (Web) con el redirect de arriba
+3. Scopes: `gmail.readonly`, `gmail.modify`
+4. Labels creados por la app: `ShieldMail/Quarantine`, `ShieldMail/Safe`
+
+## Scripts
+
 ```bash
-GROQ_API_KEY=...                 # free en console.groq.com
-GOOGLE_CLIENT_ID=...
-GOOGLE_CLIENT_SECRET=...
-NEXTAUTH_SECRET=...              # o iron-session secret
-NEXTAUTH_URL=http://127.0.0.1:43127
+npm run dev              # http://127.0.0.1:43127
+npm run build
+npm run start
+npm run lint
+npm run test:heuristics  # smoke del motor P2
 ```
 
-Sin `GROQ_API_KEY` la app sigue viva en modo heurístico (banner visible).
+## Flujo
 
-## Fuera de alcance (no hacer en 6h)
+```
+Email → heurísticas + (opcional) Groq/Llama → fuse → ThreatVerdict
+                                              ↓
+                         UI SOC (HITL: cuarentena / seguro / escalar)
+```
 
-- Entrenar modelo propio, vector DB, SIEM enterprise, multi-tenant, mobile app, auto-borrar correos sin confirmación.
+## Documentación
 
-## Criterio de “listo para pitch”
-
-- Conectar Gmail, ver 5–20 mails analizados
-- Abrir un phishing y leer explicación clara en español
-- Cuarentenar y ver el label en Gmail
-- Mostrar un falso “prompt injection” flaggeado
-- Mencionar: *modelo abierto (Llama vía Groq) + humano en el loop + explicabilidad*
+- [docs/ESTRUCTURA.md](./docs/ESTRUCTURA.md) — layout y dueños
+- [docs/plan-antiphishing.md](./docs/plan-antiphishing.md) — plan de sprints / arquitectura
+- [PITCH.md](./PITCH.md) — guion de 3 minutos para jueces
