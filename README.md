@@ -1,5 +1,5 @@
 ---
-name: Email Safety Agent
+name: Email Safety Agent 2
 overview: Construir un agente de seguridad de correo con Gmail real y un LLM abierto (Groq + Llama) que detecte phishing/BEC/prompt injection, explique el riesgo y permita cuarentena con supervisión humana — el ángulo de AI safety que gana hackatones.
 todos:
   - id: scaffold
