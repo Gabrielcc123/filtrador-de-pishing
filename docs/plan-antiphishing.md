@@ -16,7 +16,7 @@ todos:
     status: completed
   - id: sprint4-pitch
     content: "Sprint 4: polish visual, README, ensayo pitch 3 min, freeze demo"
-    status: in_progress
+    status: completed
 isProject: false
 ---
 

@@ -141,17 +141,48 @@ export function SocConsole() {
     return c;
   }, [items]);
 
+  const heuristicMode =
+    modeBanner === "heuristic_fallback" || (status !== null && !status.groqConfigured);
+
   return (
     <div className="min-h-screen">
-      <header className="border-b border-slate-300/60 bg-white/50 backdrop-blur-md">
-        <div className="mx-auto flex max-w-7xl flex-wrap items-center justify-between gap-4 px-4 py-4 sm:px-6">
-          <div>
-            <p className="font-display text-2xl tracking-tight text-slate-900 sm:text-3xl">
-              ShieldMail
-            </p>
-            <p className="mt-0.5 max-w-xl text-sm text-slate-600">
-              AI safety para el inbox — protege empleados y copilotos.
-            </p>
+      <header className="border-b border-slate-300/50 bg-white/45 backdrop-blur-md">
+        <div className="mx-auto flex max-w-7xl flex-wrap items-end justify-between gap-5 px-4 py-5 sm:px-6">
+          <div className="animate-fade-up min-w-0">
+            <div className="flex items-center gap-3">
+              <span
+                aria-hidden
+                className="brand-mark flex h-11 w-11 shrink-0 items-center justify-center rounded-xl text-sm font-semibold tracking-tight text-white shadow-sm"
+              >
+                SM
+              </span>
+              <div>
+                <p className="font-display text-3xl tracking-tight text-slate-950 sm:text-4xl">
+                  ShieldMail
+                </p>
+                <p className="mt-0.5 max-w-xl text-sm text-slate-600">
+                  AI safety para el inbox — protege empleados y copilotos.
+                </p>
+              </div>
+            </div>
+            <div className="mt-3 flex flex-wrap gap-2 text-[11px] font-medium uppercase tracking-wide">
+              <span className="rounded-md bg-teal-900/90 px-2 py-1 text-teal-50">
+                {source === "fixture" ? "Fuente · demo" : `Fuente · ${status?.gmailEmail || "Gmail"}`}
+              </span>
+              <span
+                className={cn(
+                  "rounded-md px-2 py-1",
+                  heuristicMode
+                    ? "bg-amber-100 text-amber-950"
+                    : "bg-teal-100 text-teal-950"
+                )}
+              >
+                {heuristicMode ? "Análisis · heurístico" : "Análisis · Llama + fuse"}
+              </span>
+              <span className="rounded-md bg-slate-200/80 px-2 py-1 text-slate-700">
+                HITL · humano en el loop
+              </span>
+            </div>
           </div>
           <div className="flex flex-wrap items-center gap-2">
             <Button variant="secondary" size="sm" onClick={() => void loadFixtures()} disabled={pending}>
@@ -179,7 +210,7 @@ export function SocConsole() {
         </div>
       </header>
 
-      {(modeBanner === "heuristic_fallback" || (status && !status.groqConfigured)) && (
+      {heuristicMode && (
         <div className="border-b border-amber-300/80 bg-amber-50 px-4 py-2 text-center text-sm text-amber-950">
           Modo heurístico activo — sin <code className="rounded bg-amber-100 px-1">GROQ_API_KEY</code>{" "}
           o LLM no disponible. El demo sigue vivo; añade Groq para fusión con Llama.
@@ -190,7 +221,7 @@ export function SocConsole() {
         <div
           role="status"
           aria-live="polite"
-          className="sticky top-0 z-20 border-b border-teal-300 bg-teal-100 px-4 py-2.5 text-center text-sm font-medium text-teal-950 shadow-sm"
+          className="animate-fade-up sticky top-0 z-20 border-b border-teal-300 bg-teal-100 px-4 py-2.5 text-center text-sm font-medium text-teal-950 shadow-sm"
         >
           {toast}
         </div>
@@ -198,28 +229,35 @@ export function SocConsole() {
 
       <main className="mx-auto grid max-w-7xl gap-6 px-4 py-6 sm:px-6 lg:grid-cols-[340px_1fr]">
         <aside className="space-y-4">
-          <section className="rounded-xl border border-slate-200/80 bg-white/70 p-4 shadow-sm">
+          <section className="surface-panel animate-fade-up rounded-xl p-4">
             <h2 className="font-display text-lg text-slate-900">Ataques detectados</h2>
             <ul className="mt-3 space-y-1.5 text-sm text-slate-700">
-              {Object.keys(counts).length === 0 && <li className="text-slate-500">Sin datos aún</li>}
+              {Object.keys(counts).length === 0 && (
+                <li className="text-slate-500">Sin datos aún — carga demo o Gmail</li>
+              )}
               {Object.entries(counts).map(([k, v]) => (
-                <li key={k} className="flex justify-between">
-                  <span className="capitalize">{k.replace("_", " ")}</span>
+                <li key={k} className="flex justify-between gap-3">
+                  <span className="capitalize">{k.replaceAll("_", " ")}</span>
                   <span className="tabular-nums font-medium">{v}</span>
                 </li>
               ))}
             </ul>
-            <p className="mt-3 text-xs text-slate-500">
-              Fuente: {source === "fixture" ? "fixtures demo" : status?.gmailEmail || "Gmail"}
-            </p>
           </section>
 
-          <section className="overflow-hidden rounded-xl border border-slate-200/80 bg-white/70 shadow-sm">
-            <div className="border-b border-slate-200 px-4 py-3">
+          <section className="surface-panel overflow-hidden rounded-xl">
+            <div className="border-b border-slate-200/80 px-4 py-3">
               <h2 className="font-display text-lg text-slate-900">Bandeja analizada</h2>
             </div>
             {loadState === "loading" && (
-              <p className="px-4 py-8 text-center text-sm text-slate-500">Analizando correos…</p>
+              <div className="space-y-3 px-4 py-5" aria-busy="true" aria-label="Analizando correos">
+                {[0, 1, 2].map((i) => (
+                  <div key={i} className="space-y-2">
+                    <div className="h-3 w-4/5 animate-pulse-soft rounded bg-slate-200/90" />
+                    <div className="h-2 w-1/2 animate-pulse-soft rounded bg-slate-200/70" />
+                  </div>
+                ))}
+                <p className="pt-1 text-center text-xs text-slate-500">Analizando correos…</p>
+              </div>
             )}
             {loadState === "error" && (
               <div className="space-y-3 px-4 py-6 text-center">
@@ -230,20 +268,26 @@ export function SocConsole() {
               </div>
             )}
             {loadState === "ready" && items.length === 0 && (
-              <p className="px-4 py-8 text-center text-sm text-slate-500">Inbox vacío</p>
+              <p className="px-4 py-8 text-center text-sm text-slate-500">
+                Inbox vacío. Usa Modo demo o sincroniza Gmail.
+              </p>
             )}
-            <ul className="max-h-[28rem] divide-y divide-slate-100 overflow-y-auto">
-              {items.map((item) => {
+            <ul className="max-h-[28rem] divide-y divide-slate-100/90 overflow-y-auto">
+              {items.map((item, index) => {
                 const active = (selected?.email.id ?? null) === item.email.id;
                 const maxRisk = Math.max(item.verdict.riskHuman, item.verdict.riskAgent);
                 return (
-                  <li key={item.email.id}>
+                  <li
+                    key={item.email.id}
+                    className="animate-fade-up"
+                    style={{ animationDelay: `${Math.min(index, 8) * 40}ms` }}
+                  >
                     <button
                       type="button"
                       onClick={() => setSelectedId(item.email.id)}
                       className={cn(
-                        "w-full px-4 py-3 text-left transition hover:bg-slate-50",
-                        active && "bg-teal-50/80"
+                        "w-full px-4 py-3 text-left transition hover:bg-teal-50/50",
+                        active && "bg-teal-50/90"
                       )}
                     >
                       <div className="flex items-start justify-between gap-2">
@@ -284,10 +328,13 @@ export function SocConsole() {
           </section>
         </aside>
 
-        <section className="rounded-xl border border-slate-200/80 bg-white/80 p-5 shadow-sm sm:p-6">
+        <section className="surface-panel rounded-xl p-5 sm:p-6">
           {!selected && loadState !== "loading" && (
-            <div className="flex min-h-[24rem] items-center justify-center text-slate-500">
-              Selecciona un correo para ver el veredicto del agente.
+            <div className="flex min-h-[24rem] flex-col items-center justify-center gap-2 text-center text-slate-500">
+              <p className="font-display text-xl text-slate-700">Sin selección</p>
+              <p className="max-w-sm text-sm">
+                Selecciona un correo para ver el veredicto explicable del agente.
+              </p>
             </div>
           )}
           {selected && (
@@ -300,7 +347,7 @@ export function SocConsole() {
                     {selected.action !== "none" ? ` · acción: ${selected.action}` : ""}
                   </span>
                 </div>
-                <h1 className="mt-2 font-display text-2xl text-slate-900 sm:text-3xl">
+                <h1 className="mt-2 font-display text-2xl tracking-tight text-slate-900 sm:text-3xl">
                   {selected.email.subject}
                 </h1>
                 <p className="mt-1 text-sm text-slate-600">{selected.email.from}</p>
@@ -308,10 +355,10 @@ export function SocConsole() {
               </div>
 
               <div className="grid gap-4 sm:grid-cols-2">
-                <div className="rounded-lg border border-slate-200 bg-slate-50/80 p-4">
+                <div className="rounded-lg border border-slate-200/90 bg-white/70 p-4">
                   <RiskMeter label="Riesgo humano" value={selected.verdict.riskHuman} tone="human" />
                 </div>
-                <div className="rounded-lg border border-slate-200 bg-slate-50/80 p-4">
+                <div className="rounded-lg border border-slate-200/90 bg-white/70 p-4">
                   <RiskMeter
                     label="Riesgo agente IA"
                     value={selected.verdict.riskAgent}
@@ -321,12 +368,10 @@ export function SocConsole() {
               </div>
 
               {selected.verdict.agentSimulation && (
-                <div className="relative overflow-hidden rounded-lg border border-violet-200 bg-violet-50/60 p-4">
-                  <div className="pointer-events-none absolute -right-6 -top-6 h-24 w-24 rounded-full bg-violet-200/40 blur-2xl" />
-                  <h3 className="font-display text-lg text-violet-950">
-                    ¿Qué haría el copiloto?
-                  </h3>
-                  <p className="mt-2 text-sm leading-relaxed text-violet-950/90">
+                <div className="relative overflow-hidden rounded-lg border border-teal-900/15 bg-slate-900 p-4 text-teal-50">
+                  <div className="pointer-events-none absolute -right-8 -top-8 h-28 w-28 rounded-full bg-teal-400/20 blur-2xl" />
+                  <h3 className="font-display text-lg text-white">¿Qué haría el copiloto?</h3>
+                  <p className="mt-2 text-sm leading-relaxed text-teal-50/90">
                     {selected.verdict.agentSimulation.naiveAction}
                   </p>
                   {selected.verdict.agentSimulation.dataAtRisk.length > 0 && (
@@ -334,7 +379,7 @@ export function SocConsole() {
                       {selected.verdict.agentSimulation.dataAtRisk.map((d) => (
                         <li
                           key={d}
-                          className="rounded-md bg-white/70 px-2 py-1 text-xs text-violet-900"
+                          className="rounded-md bg-white/10 px-2 py-1 text-xs text-teal-50"
                         >
                           {d}
                         </li>
@@ -382,7 +427,7 @@ export function SocConsole() {
                 </div>
               </div>
 
-              <div className="flex flex-wrap gap-2 border-t border-slate-200 pt-4">
+              <div className="flex flex-wrap gap-2 border-t border-slate-200/80 pt-4">
                 <Button
                   variant="danger"
                   disabled={pending}
