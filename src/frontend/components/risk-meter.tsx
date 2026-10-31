@@ -9,12 +9,11 @@ export function RiskMeter({
   value: number;
   tone: "human" | "agent";
 }) {
-  const color =
-    value >= 70
-      ? "bg-rose-600"
-      : value >= 40
-        ? "bg-amber-500"
-        : "bg-teal-600";
+  const level = value >= 70 ? "high" : value >= 40 ? "mid" : "low";
+  const bar =
+    level === "high" ? "bg-rose-600" : level === "mid" ? "bg-amber-500" : "bg-teal-600";
+  const text =
+    level === "high" ? "text-rose-700" : level === "mid" ? "text-amber-700" : "text-teal-800";
 
   return (
     <div className="space-y-1.5">
@@ -22,18 +21,11 @@ export function RiskMeter({
         <span className="text-xs font-medium uppercase tracking-wide text-slate-500">
           {label}
         </span>
-        <span
-          className={cn(
-            "font-display text-2xl tabular-nums",
-            value >= 70 ? "text-rose-700" : value >= 40 ? "text-amber-700" : "text-teal-800"
-          )}
-        >
-          {value}
-        </span>
+        <span className={cn("font-display text-2xl tabular-nums", text)}>{value}</span>
       </div>
       <div className="h-2 overflow-hidden rounded-full bg-slate-200/80">
         <div
-          className={cn("h-full rounded-full transition-all duration-700 ease-out", color)}
+          className={cn("h-full origin-left rounded-full animate-meter-fill", bar)}
           style={{ width: `${Math.min(100, Math.max(0, value))}%` }}
           data-tone={tone}
         />

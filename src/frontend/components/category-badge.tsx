@@ -15,9 +15,9 @@ export function CategoryBadge({ category }: { category: ThreatCategory }) {
   return (
     <span
       className={cn(
-        "inline-flex items-center rounded-md px-2 py-0.5 text-xs font-medium",
+        "inline-flex items-center rounded-md px-2 py-0.5 text-xs font-medium tracking-wide",
         category === "safe" && "bg-teal-100 text-teal-900",
-        category === "prompt_injection" && "bg-violet-100 text-violet-950",
+        category === "prompt_injection" && "bg-slate-900 text-teal-100",
         category === "phishing" && "bg-rose-100 text-rose-900",
         category === "bec" && "bg-orange-100 text-orange-950",
         category === "malware" && "bg-red-100 text-red-950",
