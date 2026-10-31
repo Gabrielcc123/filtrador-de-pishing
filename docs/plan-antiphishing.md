@@ -4,19 +4,19 @@ overview: "ShieldMail en 5 sprints cortos para 4 roles (UI, Threat Engine, Gmail
 todos:
   - id: sprint0-bootstrap
     content: "Sprint 0: P1 scaffold + contratos compartidos; P3/P4 cuentas Groq y Google"
-    status: pending
+    status: completed
   - id: sprint1-cores
     content: "Sprint 1: P1 shell UI; P2 heurísticas+tipos; P3 OAuth Gmail; P4 plantillas ataque"
-    status: pending
+    status: completed
   - id: sprint2-integrate
     content: "Sprint 2: P2 Groq+fuse; P3 sync/labels; P1 inbox/detalle; P4 mock fixtures"
-    status: pending
+    status: completed
   - id: sprint3-actions
     content: "Sprint 3: cablear acciones cuarentena; estados vacíos/error; E2E con Gmail real"
-    status: pending
+    status: completed
   - id: sprint4-pitch
     content: "Sprint 4: polish visual, README, ensayo pitch 3 min, freeze demo"
-    status: pending
+    status: in_progress
 isProject: false
 ---
 

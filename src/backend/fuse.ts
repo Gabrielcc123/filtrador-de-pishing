@@ -98,7 +98,7 @@ export function fuseVerdicts(
     reasons,
     iocs,
     recommendation,
-    modelConfidence: clamp(llm.modelConfidence * 100) / 100,
+    modelConfidence: Math.max(0, Math.min(1, llm.modelConfidence)),
     agentSimulation,
     safetyControls: { humanRequired: true, explainable: true },
     analysisMode: "fused",

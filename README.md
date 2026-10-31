@@ -87,6 +87,13 @@ Email → heurísticas + (opcional) Groq/Llama → fuse → ThreatVerdict
                          UI SOC (HITL: cuarentena / seguro / escalar)
 ```
 
+## Pack demo (P4)
+
+- [demo/README.md](./demo/README.md) — fixtures + plantillas para Gmail
+- [PITCH.md](./PITCH.md) — guion 3 min + plan B + ensayo
+- [docs/QUE-DETECTAMOS.md](./docs/QUE-DETECTAMOS.md) — lista para jueces
+- [docs/QA-CHECKLIST.md](./docs/QA-CHECKLIST.md) — E2E antes del pitch
+
 ## Documentación
 
 - [docs/ESTRUCTURA.md](./docs/ESTRUCTURA.md) — layout y dueños

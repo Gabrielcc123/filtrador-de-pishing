@@ -1,9 +1,17 @@
 # Plantilla: Legítimo (control de falso positivo)
 
 ```
+From: Google Calendar <calendar-notification@google.com>
 Asunto: Recordatorio: standup de equipo mañana 9:30
 
-Recordatorio de Google Calendar. Meet: https://meet.google.com/abc-defg-hij
+Hola,
+
+Este es un recordatorio de tu evento "Standup de equipo" mañana a las 9:30
+(America/La_Paz).
+
+Unirse con Google Meet: https://meet.google.com/abc-defg-hij
+
+— Google Calendar
 ```
 
-**Esperado:** category `safe` o riesgo bajo.
+**Esperado:** `safe` o riesgo bajo (no cuarentena).
